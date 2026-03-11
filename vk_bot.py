@@ -18,7 +18,7 @@ def detect_intent_texts(project_id, session_id, text, language_code):
     response = session_client.detect_intent(
         request={"session": session, "query_input": query_input}
     )
-    return response.query_result.fulfillment_text
+    return response.query_result.fulfillment_text, response.query_result.intent.is_fallback
 
 
 def handle_message(event, vk_api, project_id, language_code):
@@ -26,31 +26,25 @@ def handle_message(event, vk_api, project_id, language_code):
     session_id = str(event.user_id)
 
     try:
-        fulfillment_text = detect_intent_texts(
+        fulfillment_text, is_fallback = detect_intent_texts(
             project_id,
             session_id,
             user_text,
             language_code
         )
-        if fulfillment_text:
+        if is_fallback:
+            print(f"Нераспознанное сообщение от {event.user_id}: {user_text}")
+            return
+
+        elif fulfillment_text:
             vk_api.messages.send(
                 user_id=event.user_id,
                 message=fulfillment_text,
                 random_id=random.randint(1, 1000)
             )
-        else:
-            vk_api.messages.send(
-                user_id=event.user_id,
-                message="Извините, я не понял вопрос.",
-                random_id=random.randint(1, 1000)
-            )
+
     except Exception as e:
         logging.error(f"Ошибка при вызове Dialogflow: {e}")
-        vk_api.messages.send(
-            user_id=event.user_id,
-            message="Произошла ошибка. Попробуйте позже.",
-            random_id=random.randint(1, 1000)
-        )
 
 
 def main():
