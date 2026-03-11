@@ -5,9 +5,6 @@ from google.cloud import dialogflow
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 
-# logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-
 def start(update, context):
     user = update.message.from_user
     update.message.reply_text(f'Здравствуйте, {user.first_name}!')
@@ -34,11 +31,16 @@ def handle_message(update, context):
     if not project_id:
         update.message.reply_text("Ошибка конфигурации бота")
         return
-        
+
     language_code = context.bot_data.get('language_code')
 
     try:
-        fulfillment_text = detect_intent_texts(project_id, session_id, user_text, language_code)
+        fulfillment_text = detect_intent_texts(
+            project_id,
+            session_id,
+            user_text,
+            language_code
+        )
         if fulfillment_text:
             update.message.reply_text(fulfillment_text)
         else:
@@ -49,11 +51,17 @@ def handle_message(update, context):
 
 
 def main():
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logging.INFO
+    )
+
     env = Env()
     env.read_env()
     tg_token = env.str('TG_TOKEN')
     project_id = env.str('PROJECT_ID')
     language_code = env.str('LANGUAGE_CODE')
+
     key_path = env.str('GOOGLE_APPLICATION_CREDENTIALS')
     if key_path:
         expanded_path = os.path.expanduser(key_path)
@@ -69,7 +77,9 @@ def main():
     dp.bot_data['language_code'] = language_code
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    dp.add_handler(
+        MessageHandler(Filters.text & ~Filters.command, handle_message)
+    )
 
     print('Бот запущен...')
     updater.start_polling()
