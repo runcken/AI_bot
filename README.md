@@ -61,7 +61,7 @@ and you will communicate with a bot.
 For learning bot use training.py script, it requires json file with questions and answers.
 
 ```bash
-python3 traing.py
+python3 training.py
 ```
 
 
