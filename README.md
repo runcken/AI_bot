@@ -56,7 +56,14 @@ Launch on Linux(Python 3) or Windows:
 python3 bot.py
 ```
 
-and you will communicate with a bot
+and you will communicate with a bot.
+
+For learning bot use training.py script, it requires json file with questions and answers.
+
+```bash
+python3 traing.py
+```
+
 
 
 ## Notes
