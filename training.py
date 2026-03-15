@@ -1,3 +1,4 @@
+import argparse
 import os
 import json
 from environs import Env
@@ -9,7 +10,6 @@ def create_intent(
         display_name,
         training_phrases_parts,
         message_texts):
-    """Create an intent of the given intent type."""
     intents_client = dialogflow.IntentsClient()
     parent = dialogflow.AgentsClient.agent_path(project_id)
 
@@ -34,49 +34,82 @@ def create_intent(
         request={"parent": parent, "intent": intent}
     )
 
-    print(f"Intent '{display_name}' created successfully")
     return response
 
 
 def create_intents_from_json(project_id, json_file_path):
     with open(json_file_path, 'r', encoding='utf-8') as file:
-        intents_data = json.load(file)
+        intents = json.load(file)
 
-    for intent_name, intent_data in intents_data.items():
-        questions = intent_data['questions']
-        answer = intent_data['answer']
+    for intent_name, intent in intents.items():
+        questions = intent['questions']
+        answer = intent['answer']
 
-        print(f"Создаю интент: {intent_name}")
-        print(f"  Вопросов: {len(questions)}")
-        print(f"  Ответ: {answer[:50]}...")
-
-        try:
-            create_intent(
-                project_id=project_id,
-                display_name=intent_name,
-                training_phrases_parts=questions,
-                message_texts=answer
-            )
-        except Exception as e:
-            print(f"  Ошибка при создании интента '{intent_name}': {e}")
-
-    print("\nВсе интенты успешно созданы!")
+        create_intent(
+            project_id=project_id,
+            display_name=intent_name,
+            training_phrases_parts=questions,
+            message_texts=answer
+        )
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Скрипт для создания интентов из json файла."
+    )
+    parser.add_argument(
+        '--file',
+        type=str,
+        default='intents.json',
+        help='Путь к файлу с интентами (по умолчанию: intents.json)'
+    )
+    args = parser.parse_args()
+
     env = Env()
     env.read_env()
     project_id = env.str('PROJECT_ID')
-    json_file_path = "intents.json"
+    json_file_path = args.file
     key_path = env.str('GOOGLE_APPLICATION_CREDENTIALS')
+
     if key_path:
         expanded_path = os.path.expanduser(key_path)
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = expanded_path
         print(f"Установлен путь к ключу: {expanded_path}")
     else:
         print("GOOGLE_APPLICATION_CREDENTIALS не задан")
+        return
 
-    create_intents_from_json(project_id, json_file_path)
+    try:
+        with open(json_file_path, 'r', encoding='utf-8') as file:
+            intents = json.load(file)
+
+        print(f"Найдено интентов для создания: {len(intents)}")
+
+        for intent_name, intent in intents.items():
+            questions = intent['questions']
+            answer = intent['answer']
+
+            print(f"Создаю интент: {intent_name}")
+            print(f" Вопросов: {len(questions)}")
+            print(f" Ответ: {answer[:50]}...")
+
+            create_intent(
+                project_id=project_id,
+                display_name=intent_name,
+                training_phrases_parts=questions,
+                message_texts=answer
+            )
+
+            print(f"Intent '{intent_name}' created successfully")
+
+        print("\nВсе интенты успешно созданы!")
+
+    except FileNotFoundError:
+        print(f"Ошибка: Файл {json_file_path} не найден.")
+    except json.JSONDecodeError:
+        print(f"Ошибка: Неверный формат JSON в файле {json_file_path}.")
+    except Exception as e:
+        print(f"\nПроцесс прерван из-за ошибки: {e}")
 
 
 if __name__ == "__main__":
