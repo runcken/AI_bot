@@ -52,8 +52,16 @@ The script uses additinal packages:
 
 Launch on Linux(Python 3) or Windows:
 
+Telegram bot:
+
 ```bash
-python3 bot.py
+python3 tg_bot.py
+```
+
+VK bot:
+
+```bash
+python3 vk_bot.py
 ```
 
 and you will communicate with a bot.
@@ -61,8 +69,10 @@ and you will communicate with a bot.
 For learning bot use training.py script, it requires json file with questions and answers.
 
 ```bash
-python3 training.py
+python3 training.py --file path/to/your/file.json
 ```
+
+by default it used intents.json, must be located in script folder.
 
 
 
