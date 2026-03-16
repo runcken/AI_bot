@@ -6,6 +6,8 @@ from environs import Env
 from google.cloud import dialogflow
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
+from dialogflow_service import detect_intent_texts
+
 
 class TelegramLogsHandler(logging.Handler):
     def __init__(self, tg_bot, chat_id):
@@ -41,22 +43,10 @@ def start(update, context):
     update.message.reply_text(f'Здравствуйте, {user.first_name}!')
 
 
-def detect_intent_texts(project_id, session_id, text, language_code):
-    session_client = dialogflow.SessionsClient()
-    session = session_client.session_path(project_id, session_id)
-
-    text_input = dialogflow.TextInput(text=text, language_code=language_code)
-    query_input = dialogflow.QueryInput(text=text_input)
-
-    response = session_client.detect_intent(
-        request={"session": session, "query_input": query_input}
-    )
-    return response.query_result.fulfillment_text
-
-
 def handle_message(update, context):
     user_text = update.message.text
-    session_id = str(update.effective_chat.id)
+    raw_id = str(update.effective_chat.id)
+    session_id = f"tg-{raw_id}"
 
     project_id = context.bot_data.get('project_id')
     if not project_id:

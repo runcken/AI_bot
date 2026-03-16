@@ -7,8 +7,8 @@ import sys
 import vk_api as vk
 from vk_api.longpoll import VkLongPoll, VkEventType
 from environs import Env
-from google.cloud import dialogflow
 
+from dialogflow_service import detect_intent_texts
 
 class TelegramLogsHandler(logging.Handler):
     def __init__(self, tg_token, chat_id):
@@ -54,24 +54,10 @@ class TelegramLogsHandler(logging.Handler):
             self._is_sending = False
 
 
-def detect_intent_texts(project_id, session_id, text, language_code):
-    session_client = dialogflow.SessionsClient()
-    session = session_client.session_path(project_id, session_id)
-
-    text_input = dialogflow.TextInput(text=text, language_code=language_code)
-    query_input = dialogflow.QueryInput(text=text_input)
-
-    response = session_client.detect_intent(
-        request={"session": session, "query_input": query_input}
-    )
-    return (
-        response.query_result.fulfillment_text,
-        response.query_result.intent.is_fallback)
-
-
 def handle_message(event, vk_api, project_id, language_code):
     user_text = event.text
-    session_id = str(event.user_id)
+    raw_id = str(event.user_id)
+    session_id = f"vk-{raw_id}"
 
     logging.debug(f"Сообщение от VK пользователя {session_id}: {user_text}")
 
