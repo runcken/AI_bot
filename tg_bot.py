@@ -46,7 +46,7 @@ def start(update, context):
 def handle_message(update, context):
     user_text = update.message.text
     raw_id = str(update.effective_chat.id)
-    session_id = f"tg-{raw_id}"
+    session_id = f"tg_{raw_id}"
 
     project_id = context.bot_data.get('project_id')
     if not project_id:
@@ -57,7 +57,7 @@ def handle_message(update, context):
     language_code = context.bot_data.get('language_code')
 
     try:
-        fulfillment_text = detect_intent_texts(
+        fulfillment_text, _ = detect_intent_texts(
             project_id,
             session_id,
             user_text,
